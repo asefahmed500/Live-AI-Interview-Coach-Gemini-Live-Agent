@@ -23,13 +23,12 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY pnpm-lock.yaml* ./
 
 # Install pnpm
 RUN npm install -g pnpm@latest
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile --prod=false
+# Install dependencies (will use root pnpm-lock.yaml if available)
+RUN pnpm install --frozen-lockfile=false
 
 # Copy source code
 COPY . .
@@ -49,9 +48,7 @@ RUN apk add --no-cache \
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production \
-    PORT=3001 \
-    # Disable telemetry
-    NEXT_TELEMETRY_DISABLED=1
+    PORT=3001
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -62,24 +59,20 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY pnpm-lock.yaml* ./
 
 # Install pnpm
 RUN npm install -g pnpm@latest
 
 # Install ONLY production dependencies
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod=false
 
 # Copy built artifacts from builder stage
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.package.json ./node_modules/.package.json 2>/dev/null || true
-
-# Copy Prisma schema if using Prisma
-# COPY --chown=nestjs:nodejs prisma ./prisma
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 
 # Create logs directory with proper permissions
 RUN mkdir -p /app/logs && \
-    chown -R nestjs:nodejs /app/logs
+    chown -R nestjs:nodejs /app
 
 # Switch to non-root user
 USER nestjs
@@ -89,7 +82,7 @@ EXPOSE ${PORT}
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:${PORT}/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+    CMD node -e "require('http').get('http://localhost:${PORT}/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1) })"
 
 # Start the application with dumb-init
 ENTRYPOINT ["dumb-init", "--"]
