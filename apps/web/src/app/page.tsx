@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Play, Sparkles, Mic, Video, MessageSquare, TrendingUp, Shield, Zap, Check, ArrowRight } from 'lucide-react';
+import { Play, Sparkles, Video, MessageSquare, TrendingUp, Shield, Zap, Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { LandingNavbar } from '@/components/layout/landing-navbar';
 import { HeroScrollDemo } from '@/components/ui/hero-scroll-demo';
