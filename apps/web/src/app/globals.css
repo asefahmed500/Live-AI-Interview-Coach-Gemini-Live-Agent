@@ -102,7 +102,7 @@
 @layer utilities {
   /* Text Gradients - Subtle */
   .text-gradient-brand {
-    @apply bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent;
   }
 
   .text-gradient-premium {
