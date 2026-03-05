@@ -42,7 +42,8 @@
       "Bash(tasklist:*)",
       "Bash(echo:*)",
       "WebSearch",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(vercel:*)"
     ]
   }
 }
