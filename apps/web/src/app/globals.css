@@ -1,0 +1,441 @@
+/*
+ * Live AI Interview Coach - Notion-Inspired Design System
+ * Pure White Background with Subtle Gray Accents
+ * Minimal, Clean, Professional
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== NOTION-INSPIRED LIGHT THEME ===== */
+@layer base {
+  :root {
+    /* Backgrounds - Pure White Theme */
+    --bg-primary: oklch(1.00 0 0);      /* Pure White */
+    --bg-secondary: oklch(0.99 0 0);    /* Nearly White */
+    --bg-tertiary: oklch(0.97 0 0);     /* Notion Gray - Main Accent */
+    --bg-quaternary: oklch(0.95 0 0);   /* Slightly Darker Gray */
+    --bg-hover: oklch(0.96 0 0);        /* Hover State */
+    --bg-active: oklch(0.94 0 0);       /* Active State */
+    --bg-elevated: oklch(1.00 0 0);
+
+    /* Border Colors - Subtle */
+    --border-color: oklch(0.92 0 0);     /* Notion Border */
+    --border-light: oklch(0.94 0 0);     /* Light Border */
+    --border-lighter: oklch(0.96 0 0);   /* Very Light Border */
+
+    /* Text Colors - Notion Style */
+    --text-primary: oklch(0.20 0 0);     /* Primary Text */
+    --text-secondary: oklch(0.40 0 0);   /* Secondary Text */
+    --text-tertiary: oklch(0.50 0 0);    /* Tertiary Text */
+    --text-muted: oklch(0.60 0 0);       /* Muted Text */
+    --text-faint: oklch(0.70 0 0);       /* Faint Text */
+
+    /* Accent Colors - Notion Style */
+    --accent-primary: oklch(0.97 0 0);   /* Main Accent (buttons) */
+    --accent-hover: oklch(0.94 0 0);     /* Hover State */
+    --accent-active: oklch(0.92 0 0);    /* Active State */
+
+    /* Brand Colors (for CTAs) */
+    --brand-blue: #2383e2;
+    --brand-blue-hover: #1a6fb8;
+  }
+}
+
+/* ===== BASE STYLES ===== */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: oklch(1.00 0 0); /* Pure White */
+    color: oklch(0.20 0 0);       /* Notion Text */
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  /* Selection - Notion Style */
+  ::selection {
+    background: oklch(0.90 0 0);
+    color: oklch(0.20 0 0);
+  }
+
+  /* Focus Visible - Subtle */
+  :focus-visible {
+    @apply outline-none;
+    box-shadow: 0 0 0 2px oklch(1.00 0 0), 0 0 0 4px oklch(0.80 0 0);
+  }
+
+  /* Scrollbar - Notion Style */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.88 0 0);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.82 0 0);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/* ===== UTILITY CLASSES ===== */
+@layer utilities {
+  /* Text Gradients - Subtle */
+  .text-gradient-brand {
+    @apply bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-600 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-premium {
+    @apply bg-gradient-to-r from-zinc-800 to-zinc-700 bg-clip-text text-transparent;
+  }
+
+  /* Button Styles - Notion Inspired */
+  .btn-white {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium transition-all duration-200;
+    background: oklch(0.97 0 0);     /* Notion Button Gray */
+    color: oklch(0.20 0 0);           /* Dark Text */
+    border: 1px solid oklch(0.90 0 0);
+  }
+
+  .btn-white:hover {
+    background: oklch(0.94 0 0);     /* Darker on Hover */
+    border-color: oklch(0.85 0 0);
+  }
+
+  .btn-white:active {
+    background: oklch(0.92 0 0);     /* Even Darker on Active */
+  }
+
+  /* Primary Button - Blue Accent */
+  .btn-primary-notion {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium transition-all duration-200;
+    background: #2383e2;             /* Notion Blue */
+    color: oklch(1.00 0 0);          /* White Text */
+    border: none;
+  }
+
+  .btn-primary-notion:hover {
+    background: #1a6fb8;
+  }
+
+  /* Ghost Button - Minimal */
+  .btn-ghost-notion {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md font-medium transition-all duration-200;
+    background: transparent;
+    color: oklch(0.40 0 0);
+    border: none;
+  }
+
+  .btn-ghost-notion:hover {
+    background: oklch(0.97 0 0);
+  }
+
+  /* Glass Effects - Notion Style */
+  .glass {
+    background: oklch(0.99 0 0 / 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid oklch(0.92 0 0 / 0.6);
+  }
+
+  .glass-strong {
+    background: oklch(0.97 0 0 / 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid oklch(0.90 0 0 / 0.6);
+  }
+
+  .glass-card {
+    background: oklch(1.00 0 0 / 0.5);
+    backdrop-filter: blur(20px);
+    border: 1px solid oklch(0.92 0 0 / 0.4);
+  }
+
+  /* Surface Levels - Notion Style */
+  .surface-1 {
+    background: oklch(1.00 0 0);     /* Pure White */
+  }
+
+  .surface-2 {
+    background: oklch(0.99 0 0);     /* Nearly White */
+  }
+
+  .surface-3 {
+    background: oklch(0.97 0 0);     /* Notion Gray */
+  }
+
+  .surface-4 {
+    background: oklch(0.95 0 0);     /* Darker Gray */
+  }
+
+  .surface-elevated {
+    background: oklch(1.00 0 0);
+    box-shadow: 0 1px 3px oklch(0.20 0 0 / 0.08), 0 1px 2px oklch(0.20 0 0 / 0.04);
+  }
+
+  .surface-card {
+    background: oklch(1.00 0 0);
+    border: 1px solid oklch(0.92 0 0);
+    border-radius: 6px;
+  }
+
+  /* Notion Shadow - Subtle */
+  .shadow-notion {
+    box-shadow: 0 1px 2px oklch(0.20 0 0 / 0.08);
+  }
+
+  .shadow-notion-md {
+    box-shadow: 0 2px 4px oklch(0.20 0 0 / 0.08), 0 1px 2px oklch(0.20 0 0 / 0.04);
+  }
+
+  .shadow-notion-lg {
+    box-shadow: 0 4px 8px oklch(0.20 0 0 / 0.08), 0 2px 4px oklch(0.20 0 0 / 0.04);
+  }
+
+  /* Smooth Transitions */
+  .transition-premium {
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Button Base Styles */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md font-medium transition-premium text-sm;
+  }
+
+  .btn-primary {
+    @apply btn;
+    background: oklch(0.97 0 0);
+    color: oklch(0.20 0 0);
+    border: 1px solid oklch(0.90 0 0);
+  }
+
+  .btn-primary:hover {
+    background: oklch(0.94 0 0);
+    border-color: oklch(0.85 0 0);
+  }
+
+  .btn-secondary {
+    @apply btn border;
+    background: oklch(1.00 0 0);
+    color: oklch(0.40 0 0);
+    border-color: oklch(0.92 0 0);
+  }
+
+  .btn-secondary:hover {
+    background: oklch(0.97 0 0);
+    border-color: oklch(0.90 0 0);
+  }
+
+  .btn-ghost {
+    @apply btn;
+    background: transparent;
+    color: oklch(0.40 0 0);
+    border: none;
+  }
+
+  .btn-ghost:hover {
+    background: oklch(0.97 0 0);
+  }
+
+  /* Input Styles - Notion Style */
+  .input {
+    @apply w-full px-3 py-2 rounded-md text-sm transition-all duration-200;
+    background: oklch(1.00 0 0);
+    border: 1px solid oklch(0.92 0 0);
+    color: oklch(0.20 0 0);
+  }
+
+  .input::placeholder {
+    color: oklch(0.60 0 0);
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: oklch(0.70 0 0);
+    box-shadow: 0 0 0 2px oklch(1.00 0 0), 0 0 0 4px oklch(0.85 0 0);
+  }
+
+  .input-with-icon {
+    padding-left: 40px;
+  }
+
+  /* Card Styles - Notion Style */
+  .card {
+    @apply rounded-md border;
+    background: oklch(1.00 0 0);
+    border-color: oklch(0.92 0 0);
+  }
+
+  .card-hover {
+    @apply card transition-premium cursor-pointer;
+  }
+
+  .card-hover:hover {
+    background: oklch(0.99 0 0);
+    border-color: oklch(0.88 0 0);
+  }
+
+  /* Notion Divider */
+  .divider {
+    height: 1px;
+    background: oklch(0.92 0 0);
+  }
+
+  /* Notion Badge */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium;
+    background: oklch(0.97 0 0);
+    color: oklch(0.40 0 0);
+    border: 1px solid oklch(0.90 0 0);
+  }
+}
+
+/* ===== COMPONENT STYLES ===== */
+@layer components {
+  /* Loading Spinner - Notion Style */
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid oklch(0.92 0 0 / 0.3);
+    border-top-color: oklch(0.50 0 0);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  .spinner-lg {
+    width: 32px;
+    height: 32px;
+    border: 3px solid oklch(0.92 0 0 / 0.3);
+    border-top-color: oklch(0.50 0 0);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Shimmer Effect - Notion Style */
+  .shimmer {
+    @apply animate-pulse;
+    background: linear-gradient(90deg, oklch(0.99 0 0) 25%, oklch(1.00 0 0) 50%, oklch(0.99 0 0) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Smooth Animations */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .animation-delay-100 { animation-delay: 0.1s; }
+  .animation-delay-200 { animation-delay: 0.2s; }
+  .animation-delay-300 { animation-delay: 0.3s; }
+  .animation-delay-400 { animation-delay: 0.4s; }
+
+  /* Notion Hover Effect */
+  .hover-notion {
+    transition: background-color 100ms ease-in-out;
+  }
+
+  .hover-notion:hover {
+    background-color: oklch(0.97 0 0);
+  }
+
+  /* Notion Link */
+  .link-notion {
+    color: oklch(0.40 0 0);
+    text-decoration: none;
+    border-bottom: 1px solid oklch(0.85 0 0);
+  }
+
+  .link-notion:hover {
+    color: oklch(0.20 0 0);
+    border-bottom-color: oklch(0.60 0 0);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* High Contrast Mode Support */
+  @media (prefers-contrast: high) {
+    .card {
+      border-width: 2px;
+    }
+
+    .btn {
+      border-width: 2px;
+    }
+  }
+}

@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:7.0
+    container_name: live-interview-coach-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: live-interview-coach
+    networks:
+      - app-network
+
+  # NestJS API
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    container_name: live-interview-coach-api
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      NODE_ENV: production
+      API_PORT: 3001
+      MONGODB_URI: mongodb://mongo:27017/live-interview-coach
+      WEB_URL: http://localhost:3000
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    profiles:
+      - prod
+
+  # Next.js Web App
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    container_name: live-interview-coach-web
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      WEB_PORT: 3000
+      API_URL: http://localhost:3001
+      WS_URL: ws://localhost:3001
+    depends_on:
+      - api
+    networks:
+      - app-network
+    profiles:
+      - prod
+
+  # Development API (for hot reload)
+  api-dev:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    container_name: live-interview-coach-api-dev
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      NODE_ENV: development
+      API_PORT: 3001
+      MONGODB_URI: mongodb://mongo:27017/live-interview-coach
+      WEB_URL: http://localhost:3000
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages/shared:/app/packages/shared
+      - /app/node_modules
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    profiles:
+      - dev
+    command: pnpm run dev --filter=@live-ai-coach/api
+
+  # Development Web (for hot reload)
+  web-dev:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    container_name: live-interview-coach-web-dev
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      WEB_PORT: 3000
+      API_URL: http://localhost:3001
+      WS_URL: ws://localhost:3001
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./packages/shared:/app/packages/shared
+      - /app/node_modules
+    depends_on:
+      - api-dev
+    networks:
+      - app-network
+    profiles:
+      - dev
+    command: pnpm run dev --filter=@live-ai-coach/web
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
+    driver: bridge

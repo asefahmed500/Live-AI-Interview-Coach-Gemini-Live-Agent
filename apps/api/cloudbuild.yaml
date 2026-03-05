@@ -1,0 +1,98 @@
+# Cloud Build configuration for Google Cloud Run deployment
+# Usage: gcloud builds submit --config cloudbuild.yaml .
+
+# Substitutions:
+# - _SERVICE_NAME: Name of the Cloud Run service
+# - _REGION: Deployment region (default: us-central1)
+# - _IMAGE_NAME: Name of the Docker image
+
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$COMMIT_SHA'
+      - '-t'
+      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:latest'
+      - '-f'
+      - './apps/api/Dockerfile'
+      - './apps/api'
+    id: 'build'
+
+  # Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$COMMIT_SHA'
+    id: 'push'
+    waitFor: ['build']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - '$_SERVICE_NAME'
+      - '--image'
+      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--platform'
+      - 'managed'
+      - '--region'
+      - '$_REGION'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '3001'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--max-instances'
+      - '100'
+      - '--min-instances'
+      - '0'
+      - '--timeout'
+      - '300s'
+      - '--concurrency'
+      - '80'
+      - '--ingress'
+      - 'all'
+      - '--set-env-vars'
+      - 'NODE_ENV=production'
+      - '--set-secrets'
+      - 'MONGODB_URI=mongodb-uri:latest'
+      - '--set-secrets'
+      - 'GEMINI_API_KEY=gemini-api-key:latest'
+      - '--set-secrets'
+      - 'JWT_SECRET=jwt-secret:latest'
+      - '--execution-environment'
+      - 'gen2'
+      - '--no-cpu-throttling'
+    id: 'deploy'
+    waitFor: ['push']
+
+# Images to be cached
+images:
+  - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$COMMIT_SHA'
+  - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:latest'
+
+# Default substitutions
+substitutions:
+  _SERVICE_NAME: 'live-interview-api'
+  _REGION: 'us-central1'
+
+# Timeout for the build
+timeout: '1200s'
+
+# Service account (optional - for accessing other GCP resources)
+# options:
+#   env: ['CLOUD_BUILD_ACCOUNT=$_SERVICE_ACCOUNT_EMAIL']
+
+# Logs bucket
+# logsBucket: 'gs://$_PROJECT_ID-logs'
+
+# GitHub trigger configuration (if using Cloud Build with GitHub)
+# Connect your GitHub repository and create a trigger with:
+# - Event: Push to branch
+# - Branch: main
+# - Build Configuration: cloudbuild.yaml

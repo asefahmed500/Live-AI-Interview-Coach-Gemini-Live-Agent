@@ -1,0 +1,45 @@
+{
+  "name": "live-ai-interview-coach",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A production-ready monorepo for a live AI interview coaching application",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@live-ai-coach/web",
+    "dev:api": "turbo run dev --filter=@live-ai-coach/api",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:dev": "docker-compose --profile dev up",
+    "docker:build": "docker-compose build"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.0",
+    "turbo": "^1.12.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "dependencies": {
+    "@nestjs/mapped-types": "^2.1.0",
+    "@nestjs/swagger": "^11.2.6",
+    "@nestjs/terminus": "^11.1.1",
+    "@types/compression": "^1.7.5",
+    "socket.io-client": "^4.7.0"
+  }
+}
