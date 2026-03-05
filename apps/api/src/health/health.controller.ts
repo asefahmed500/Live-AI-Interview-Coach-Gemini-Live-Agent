@@ -2,9 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-@ApiTags('health')
 @Controller('health')
 export class HealthController {
   constructor(
@@ -13,9 +11,6 @@ export class HealthController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Health check' })
-  @ApiResponse({ status: 200, description: 'Service is healthy' })
-  @ApiResponse({ status: 503, description: 'Service is unhealthy' })
   check() {
     const mongoState = this.connection.readyState;
     const isHealthy = mongoState === 1;
@@ -33,8 +28,6 @@ export class HealthController {
   }
 
   @Get('live')
-  @ApiOperation({ summary: 'Liveness probe' })
-  @ApiResponse({ status: 200, description: 'Service is alive' })
   liveness() {
     return {
       status: 'ok',
@@ -46,9 +39,6 @@ export class HealthController {
   }
 
   @Get('ready')
-  @ApiOperation({ summary: 'Readiness probe' })
-  @ApiResponse({ status: 200, description: 'Service is ready' })
-  @ApiResponse({ status: 503, description: 'Service is not ready' })
   readiness() {
     const mongoState = this.connection.readyState;
     const isReady = mongoState === 1;
