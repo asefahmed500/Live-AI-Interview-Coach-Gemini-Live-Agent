@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { WS_EVENTS } from '@live-ai-coach/shared';
+import { WS_EVENTS } from '@/types-shared';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
 
