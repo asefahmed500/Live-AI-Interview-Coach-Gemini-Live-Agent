@@ -4,16 +4,15 @@
 
 set -e
 
-# Configuration - UPDATE THESE
+# Configuration
 PROJECT_ID="voice-ai-agent-447515"
 REGION=${REGION:-"us-central1"}
 SERVICE_NAME="live-interview-api"
 
-# NEW API KEY
-GEMINI_API_KEY="AIzaSyC1hC7VQNRLlSsLL_8nPO-udRffqjl8V98"
-
-# MongoDB Atlas
-MONGODB_URI="mongodb+srv://liveaicoach:l7bTrF60Aes838d6@cluster0.8vksczm.mongodb.net/liveaicoachdb?appName=Cluster0"
+# API Keys and Secrets - DO NOT HARDCODE
+# Use Google Secret Manager instead
+GEMINI_API_KEY=${GEMINI_API_KEY:-""}
+MONGODB_URI=${MONGODB_URI:-""}
 
 # Colors for output
 RED='\033[0;31m'
@@ -30,8 +29,19 @@ echo ""
 if ! command -v gcloud &> /dev/null; then
   echo -e "${RED}✗ Error: gcloud CLI not installed${NC}"
   echo -e "${YELLOW}Install from: https://cloud.google.com/sdk/docs/install${NC}"
-  echo ""
-  echo -e "${YELLOW}For Windows, use: winget install Google.CloudSDK${NC}"
+  exit 1
+fi
+
+# Validate environment
+if [ -z "$GEMINI_API_KEY" ]; then
+  echo -e "${RED}✗ Error: GEMINI_API_KEY environment variable not set${NC}"
+  echo -e "${YELLOW}Usage: GEMINI_API_KEY=your_key bash deploy.sh${NC}"
+  exit 1
+fi
+
+if [ -z "$MONGODB_URI" ]; then
+  echo -e "${RED}✗ Error: MONGODB_URI environment variable not set${NC}"
+  echo -e "${YELLOW}Usage: MONGODB_URI=mongodb+srv://... bash deploy.sh${NC}"
   exit 1
 fi
 
