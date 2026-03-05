@@ -4,10 +4,16 @@
 
 set -e
 
-# Configuration
-PROJECT_ID=${PROJECT_ID:-"your-project-id"}
+# Configuration - UPDATE THESE
+PROJECT_ID="voice-ai-agent-447515"
 REGION=${REGION:-"us-central1"}
 SERVICE_NAME="live-interview-api"
+
+# NEW API KEY
+GEMINI_API_KEY="AIzaSyC1hC7VQNRLlSsLL_8nPO-udRffqjl8V98"
+
+# MongoDB Atlas
+MONGODB_URI="mongodb+srv://liveaicoach:l7bTrF60Aes838d6@cluster0.8vksczm.mongodb.net/liveaicoachdb?appName=Cluster0"
 
 # Colors for output
 RED='\033[0;31m'
@@ -20,38 +26,48 @@ echo -e "${GREEN}🚀 Live AI Interview Coach Deployment${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 
-# Validate environment
-if [ -z "$GEMINI_API_KEY" ]; then
-  echo -e "${RED}✗ Error: GEMINI_API_KEY environment variable not set${NC}"
-  exit 1
-fi
-
-if [ -z "$MONGODB_URI" ]; then
-  echo -e "${YELLOW}⚠ Warning: MONGODB_URI not set. Using default.${NC}"
-  MONGODB_URI="mongodb://localhost:27017/live-interview-coach"
-fi
-
 # Check if gcloud is installed
 if ! command -v gcloud &> /dev/null; then
   echo -e "${RED}✗ Error: gcloud CLI not installed${NC}"
   echo -e "${YELLOW}Install from: https://cloud.google.com/sdk/docs/install${NC}"
+  echo ""
+  echo -e "${YELLOW}For Windows, use: winget install Google.CloudSDK${NC}"
   exit 1
 fi
 
 # Set project
-echo -e "${GREEN}[1/6]${NC} Setting project to: ${PROJECT_ID}"
+echo -e "${GREEN}[1/7]${NC} Setting project to: ${PROJECT_ID}"
 gcloud config set project "$PROJECT_ID"
 
+# Check if authenticated
+echo -e "${GREEN}[2/7]${NC} Checking authentication..."
+if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null | grep -q .; then
+  echo -e "${YELLOW}⚠ Not authenticated. Running login...${NC}"
+  gcloud auth login
+fi
+
 # Enable required APIs
-echo -e "${GREEN}[2/6]${NC} Enabling required Google Cloud APIs..."
+echo -e "${GREEN}[3/7]${NC} Enabling required Google Cloud APIs..."
 gcloud services enable \
   run.googleapis.com \
   cloudbuild.googleapis.com \
   aiplatform.googleapis.com \
-  --quiet
+  secretmanager.googleapis.com \
+  --quiet || {
+  echo -e "${YELLOW}⚠ Some APIs may already be enabled${NC}"
+}
+
+# Create secrets
+echo -e "${GREEN}[4/7]${NC} Setting up secrets..."
+echo -n "$GEMINI_API_KEY" | gcloud secrets create gemini-api-key --data-file=- 2>/dev/null || \
+  echo -n "$GEMINI_API_KEY" | gcloud secrets update gemini-api-key --data-file=-
+
+echo -n "$MONGODB_URI" | gcloud secrets create mongodb-uri --data-file=- 2>/dev/null || \
+  echo -n "$MONGODB_URI" | gcloud secrets update mongodb-uri --data-file=-
 
 # Build the container image
-echo -e "${GREEN}[3/6]${NC} Building container image with Cloud Build..."
+echo -e "${GREEN}[5/7]${NC} Building container image with Cloud Build..."
+cd apps/api
 gcloud builds submit \
   --tag "gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest" \
   --project "${PROJECT_ID}" \
@@ -63,7 +79,7 @@ gcloud builds submit \
 }
 
 # Deploy to Cloud Run
-echo -e "${GREEN}[4/6]${NC} Deploying to Cloud Run..."
+echo -e "${GREEN}[6/7]${NC} Deploying to Cloud Run..."
 gcloud run deploy "${SERVICE_NAME}" \
   --image "gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest" \
   --platform managed \
@@ -78,33 +94,39 @@ gcloud run deploy "${SERVICE_NAME}" \
     NODE_ENV=production, \
     API_PORT=3001, \
     API_HOST=0.0.0.0, \
-    API_PREFIX=api \
+    API_PREFIX=api, \
+    CORS_ORIGINS=https://web-taupe-theta-94.vercel.app,http://localhost:3000 \
   --set-secrets \
-    GEMINI_API_KEY=gemini-api-key, \
-    MONGODB_URI=mongodb-uri \
-  --allow-unauthenticated \
-  --quiet || {
+    GEMINI_API_KEY=gemini-api-key:latest, \
+    MONGODB_URI=mongodb-uri:latest \
+  --allow-unauthenticated || {
   echo -e "${RED}✗ Deployment failed${NC}"
   exit 1
 }
+
+cd ../..
 
 # Get service URL
 SERVICE_URL=$(gcloud run services describe "${SERVICE_NAME}" \
   --region "${REGION}" \
   --format 'value(status.url)')
 
-echo -e "${GREEN}[5/6]${NC} Service deployed successfully!"
+echo -e "${GREEN}[7/7]${NC} Service deployed successfully!"
 echo -e "${GREEN}   URL: ${SERVICE_URL}${NC}"
 
 # Update frontend environment
-echo -e "${GREEN}[6/6]${NC} Deployment complete!"
+echo ""
+echo -e "${GREEN}✅ Deployment Complete!${NC}"
+echo ""
+echo -e "${YELLOW}📝 API URL: ${SERVICE_URL}${NC}"
+echo -e "${YELLOW}📝 WebSocket URL: wss://$(echo $SERVICE_URL | sed 's/https:\/\///')${NC}"
 echo ""
 echo -e "${YELLOW}📝 Next Steps:${NC}"
-echo -e "1. Update frontend .env.local:"
+echo -e "1. Update Vercel environment variables:"
 echo -e "   NEXT_PUBLIC_API_URL=${SERVICE_URL}"
-echo -e "   NEXT_PUBLIC_WS_URL=${SERVICE_URL}"
+echo -e "   NEXT_PUBLIC_WS_URL=wss://$(echo $SERVICE_URL | sed 's/https:\/\///')"
 echo ""
-echo -e "2. Deploy frontend to Vercel:"
-echo -e "   cd apps/web && vercel deploy --prod"
+echo -e "2. Or redeploy frontend with:"
+echo -e "   cd apps/web && vercel --prod"
 echo ""
-echo -e "${GREEN}✨ Happy Hacking! 🚀${NC}"
+echo -e "${GREEN}✨ Done! 🚀${NC}"

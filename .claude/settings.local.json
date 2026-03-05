@@ -43,7 +43,9 @@
       "Bash(echo:*)",
       "WebSearch",
       "Bash(dir:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(sed:*)",
+      "Bash(mkdir:*)"
     ]
   }
 }
