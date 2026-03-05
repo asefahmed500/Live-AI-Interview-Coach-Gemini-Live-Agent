@@ -1,25 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+
 import { Play, Sparkles, Video, MessageSquare, TrendingUp, Shield, Zap, Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { LandingNavbar } from '@/components/layout/landing-navbar';
-import { HeroScrollDemo } from '@/components/ui/hero-scroll-demo';
+
 
 export default function HomePage() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'oklch(1.00 0 0)' }}>
-        <div className="spinner-lg"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen" style={{ background: 'oklch(1.00 0 0)' }}>
@@ -73,9 +60,6 @@ export default function HomePage() {
       </section>
 
       {/* Scroll Animation Demo Section */}
-      <section className="relative overflow-hidden" style={{ background: 'oklch(1.00 0 0)' }}>
-        <HeroScrollDemo />
-      </section>
 
       {/* Features Section */}
       <section id="features" className="py-20" style={{ borderTop: '1px solid oklch(0.90 0 0 / 0.5)' }}>
