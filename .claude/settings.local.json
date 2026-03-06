@@ -45,7 +45,11 @@
       "Bash(dir:*)",
       "Bash(vercel:*)",
       "Bash(sed:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(\"C:/Users/asefa/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" builds:*)",
+      "Bash(\"C:/Users/asefa/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" auth:*)",
+      "Bash(gcloud config:*)",
+      "Bash(powershell.exe:*)"
     ]
   }
 }

@@ -375,24 +375,31 @@
   }
 
   .animate-fade-in-up {
-    animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
+    animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .animate-fade-in {
-    animation: fade-in 0.3s ease-out forwards;
-    opacity: 0;
+    animation: fade-in 0.5s ease-out forwards;
   }
 
   .animate-slide-in-right {
-    animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
+    animation: slide-in-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .animation-delay-100 { animation-delay: 0.1s; }
   .animation-delay-200 { animation-delay: 0.2s; }
   .animation-delay-300 { animation-delay: 0.3s; }
   .animation-delay-400 { animation-delay: 0.4s; }
+
+  /* Slow pulse animation for hero background */
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 
   /* Notion Hover Effect */
   .hover-notion {

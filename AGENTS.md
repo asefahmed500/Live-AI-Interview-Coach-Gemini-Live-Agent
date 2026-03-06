@@ -24,7 +24,7 @@ pnpm build            # Production build
 pnpm test             # Run all tests
 pnpm test:watch       # Watch mode
 pnpm test:cov         # With coverage
-pnpm jest modules/gemini/gemini.service.spec.ts  # Single test file
+pnpm jest src/modules/gemini/gemini.service.spec.ts  # Single test file
 pnpm lint             # Lint
 ```
 
@@ -32,9 +32,11 @@ pnpm lint             # Lint
 
 ```bash
 cd apps/web
-pnpm dev              # Dev server
+
+pnpm dev              # Dev server (port 3000)
 pnpm build            # Production build
 pnpm lint             # Lint
+pnpm start            # Production server
 ```
 
 ## Code Style
@@ -98,8 +100,10 @@ NEXT_PUBLIC_WS_URL=ws://localhost:3001
 ## Docker
 
 ```bash
-pnpm docker:up        # Production
+pnpm docker:up        # Production (MongoDB + API)
 pnpm docker:dev       # Dev with hot reload
+pnpm docker:down      # Stop containers
+pnpm docker:build     # Build images
 ```
 
 ## Performance
@@ -134,3 +138,18 @@ pnpm docker:dev       # Dev with hot reload
 ### Typography
 
 - Ellipsis `…` not `...`, loading: `"Loading…"`, `text-wrap: balance` on headings
+
+## Git Conventions
+
+- Use conventional commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
+- Create feature branches from `main`: `feature/your-feature-name`
+- Run `pnpm lint` and `pnpm build` before committing
+- Never commit secrets or `.env` files
+
+## Development Workflow
+
+1. Run `pnpm install` to install dependencies
+2. Start MongoDB: `pnpm docker:up` or use local MongoDB
+3. Run `pnpm dev` for all apps, or `pnpm dev:web` / `pnpm dev:api` for single app
+4. Create tests for new features in `*.spec.ts` files
+5. Use `pnpm test:cov` to check coverage before submitting PR

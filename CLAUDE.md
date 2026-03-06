@@ -203,7 +203,10 @@ types-shared/           # Inlined shared types for Vercel deployment
 - Background: `oklch(1.00 0 0)` (pure white)
 - Buttons: `oklch(0.97 0 0)` (Notion gray)
 - Borders: `oklch(0.92 0 0)` (subtle borders)
+- Text gradient: `from-blue-600 via-purple-600 to-pink-600` (visible on white)
 - Utility classes: `.glass`, `.surface-card`
+
+**Important**: Text gradients must use visible colors (blue-purple-pink), NOT dark zinc colors that are invisible on white backgrounds.
 
 ### Vercel Deployment - Shared Package Workaround
 
@@ -225,7 +228,7 @@ import { WS_EVENTS } from '@/types-shared';
 ### Production Architecture
 
 ```
-Frontend (Next.js)  →  Vercel
+Frontend (Next.js)  →  Vercel OR Google Cloud Run
      ↓
 API (NestJS)       →  Google Cloud Run (WebSocket support)
      ↓
@@ -233,6 +236,12 @@ Database           →  MongoDB Atlas
 ```
 
 **Why Cloud Run for API?** Vercel's serverless functions (max 10-60s) cannot support persistent WebSocket connections required by Socket.IO.
+
+### Frontend - Deployment Options
+
+The frontend can be deployed to either **Vercel** (recommended) or **Google Cloud Run**.
+
+#### Option 1: Vercel (Recommended)
 
 ### Frontend - Vercel Deployment
 
@@ -254,9 +263,21 @@ NEXT_PUBLIC_API_URL=https://your-api-url.run.app
 NEXT_PUBLIC_WS_URL=wss://your-api-url.run.app
 ```
 
+#### Option 2: Google Cloud Run
+
+The web app can also be deployed to Cloud Run using the Cloud Build configuration:
+
+```bash
+gcloud builds submit --config apps/web/cloudbuild.yaml .
+```
+
+This requires a Dockerfile at `docker/web/Dockerfile` (currently not present - needs to be created).
+
 ### API - Google Cloud Run Deployment
 
 **Project**: `voice-ai-agent-447515`
+
+**⚠️ SECURITY WARNING**: Never hardcode credentials in deployment scripts. Always use environment variables or Google Secret Manager. The PowerShell scripts (`deploy-gcp.ps1`, `deploy-windows.ps1`) should have their credentials replaced with environment variable references before use.
 
 **Prerequisites**:
 ```bash
@@ -271,34 +292,56 @@ gcloud config set project voice-ai-agent-447515
 
 **Automated deployment**:
 ```bash
+# Set secrets as environment variables (NOT hardcoded)
+export GEMINI_API_KEY="your-gemini-api-key"
+export MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/dbname"
+
 cd /d/laic
 bash deploy.sh
 ```
 
-This script:
-1. Enables required APIs (Cloud Run, Cloud Build, AI Platform)
-2. Builds Docker container with Cloud Build
-3. Deploys to Cloud Run (us-central1, 2048Mi, 2 CPU)
-4. Configures secrets and environment variables
-5. Returns the API URL
+The script:
+1. Validates that GEMINI_API_KEY and MONGODB_URI environment variables are set
+2. Enables required APIs (Cloud Run, Cloud Build, AI Platform)
+3. Creates/updates secrets in Google Secret Manager
+4. Builds Docker container with Cloud Build
+5. Deploys to Cloud Run (us-central1, 2048Mi, 2 CPU)
+6. Returns the API URL
+
+#### Windows PowerShell Alternative
+
+On Windows, you can use the PowerShell deployment script:
+
+```powershell
+# Set credentials as environment variables first!
+$env:GEMINI_API_KEY="your-gemini-api-key"
+$env:MONGODB_URI="mongodb+srv://..."
+
+./deploy-windows.ps1
+```
+
+**Important**: Always use environment variables with PowerShell scripts. Never hardcode credentials.
 
 **Manual deployment** (if script fails):
 ```bash
-# Create secrets
-gcloud secrets create gemini-api-key --data-file=<(echo "YOUR_API_KEY")
-gcloud secrets create mongodb-uri --data-file=<(echo "mongodb+srv://...")
+# Create/update secrets
+echo -n "YOUR_API_KEY" | gcloud secrets versions add gemini-api-key --data-file=-
+echo -n "mongodb+srv://..." | gcloud secrets versions add mongodb-uri --data-file=-
 
-# Deploy
+# Build and deploy (using gcr.io, not artifact registry)
 cd apps/api
-gcloud builds submit --tag gcr.io/voice-ai-agent-447515/live-interview-api
+gcloud builds submit . --tag gcr.io/voice-ai-agent-447515/live-interview-api:latest
 gcloud run deploy live-interview-api \
-  --image gcr.io/voice-ai-agent-447515/live-interview-api \
+  --image gcr.io/voice-ai-agent-447515/live-interview-api:latest \
   --region us-central1 \
   --memory 2048Mi --cpu 2 \
   --timeout 3600s \
-  --set-secrets GEMINI_API_KEY=gemini-api-key,MONGODB_URI=mongodb-uri \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,MONGODB_URI=mongodb-uri:latest \
+  --set-env-vars NODE_ENV=production,API_PORT=3001,API_HOST=0.0.0.0,CORS_ORIGINS=https://web-taupe-theta-94.vercel.app,http://localhost:3000 \
   --allow-unauthenticated
 ```
+
+**Important**: Use `gcr.io` (Google Container Registry) instead of Artifact Registry - the `cloud-run-source-deploy` repository may not exist in your project.
 
 **MongoDB Atlas connection string format**:
 ```
@@ -336,6 +379,28 @@ GEMINI_TIMEOUT=120000
 ```
 
 **Security**: Never commit API keys. Use environment variables or secrets managers.
+
+### Required Dependencies (apps/api/package.json)
+
+**Critical for DTOs** - `@nestjs/mapped-types` is required for `PartialType` and `OmitType`:
+```json
+{
+  "dependencies": {
+    "@nestjs/mapped-types": "^2.0.0"
+  }
+}
+```
+
+If you see `Cannot find module '@nestjs/mapped-types'`, add it to dependencies.
+
+### Health Module (Simplified)
+
+The health check module at `apps/api/src/health/` has been simplified:
+- **No @nestjs/swagger** decorators (removed to reduce dependencies)
+- **No @nestjs/terminus** dependency (uses plain NestJS controller)
+- Provides three endpoints: `/health`, `/health/live`, `/health/ready`
+
+This is intentional for Cloud Run deployment - the health check must work without additional dependencies.
 
 ### TypeScript Configuration (apps/api/tsconfig.json)
 
@@ -432,6 +497,27 @@ email: string;
 **TypeScript compilation including dist folder**:
 - Delete `*.tsbuildinfo` files
 - Verify `tsconfig.json` has proper include/exclude patterns
+
+**Cloud Build - Missing @nestjs/mapped-types**:
+- Add `"@nestjs/mapped-types": "^2.0.0"` to `apps/api/package.json` dependencies
+- This is required for DTOs that use `PartialType` and `OmitType`
+
+**Cloud Build - @nestjs/swagger errors**:
+- The health module does not use @nestjs/swagger decorators
+- Remove any `@ApiTags`, `@ApiOperation`, etc. decorators from health controllers
+
+**Artifact Registry "Repository not found" error**:
+- Use `gcr.io` (Google Container Registry) instead of Artifact Registry
+- Example: `gcr.io/voice-ai-agent-447515/live-interview-api:latest`
+- The `cloud-run-source-deploy` repository in Artifact Registry may not exist
+
+**Frontend hero section "pop up then vanish"** (FIXED):
+- Issue was caused by CSS animation classes setting `opacity: 0` as base state
+- Fixed in `apps/web/src/app/globals.css`:
+  - Removed `opacity: 0` from `.animate-fade-in-up`, `.animate-fade-in`, `.animate-slide-in-right`
+  - Added missing `.animate-pulse-slow` keyframes for hero background gradient
+- Animation keyframes already handle opacity transitions, no need for base `opacity: 0`
+- For future animations: define initial state in `@keyframes`, not in the class selector
 
 ## Key Files Reference
 

@@ -103,7 +103,10 @@ async function bootstrap() {
   const apiPrefix = configService.get<string>('API_PREFIX', 'api');
   app.setGlobalPrefix(apiPrefix);
 
-  const port = configService.get<number>('API_PORT', 3001);
+  // Cloud Run uses PORT env var, otherwise use API_PORT, default to 3001
+  const port = process.env.PORT
+    ? parseInt(process.env.PORT, 10)
+    : configService.get<number>('API_PORT', 3001);
   const host = configService.get<string>('API_HOST', '0.0.0.0');
 
   await app.listen(port, host);

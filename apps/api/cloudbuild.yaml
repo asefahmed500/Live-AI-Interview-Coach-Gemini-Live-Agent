@@ -12,19 +12,19 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$COMMIT_SHA'
+      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$_COMMIT_SHA'
       - '-t'
       - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:latest'
       - '-f'
-      - './apps/api/Dockerfile'
-      - './apps/api'
+      - 'apps/api/Dockerfile'
+      - '.'
     id: 'build'
 
   # Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$COMMIT_SHA'
+      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$_COMMIT_SHA'
     id: 'push'
     waitFor: ['build']
 
@@ -35,7 +35,7 @@ steps:
       - 'deploy'
       - '$_SERVICE_NAME'
       - '--image'
-      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$COMMIT_SHA'
+      - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$_COMMIT_SHA'
       - '--platform'
       - 'managed'
       - '--region'
@@ -73,13 +73,14 @@ steps:
 
 # Images to be cached
 images:
-  - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$COMMIT_SHA'
+  - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:$_COMMIT_SHA'
   - 'us-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/$_SERVICE_NAME:latest'
 
 # Default substitutions
 substitutions:
   _SERVICE_NAME: 'live-interview-api'
   _REGION: 'us-central1'
+  _COMMIT_SHA: 'latest'
 
 # Timeout for the build
 timeout: '1200s'
