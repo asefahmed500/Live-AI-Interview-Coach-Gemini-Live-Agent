@@ -22,10 +22,18 @@ class ApiClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
-        // Add auth token if available
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        // Add auth token if available - use Zustand storage format
+        const authStorage = typeof window !== 'undefined' ? localStorage.getItem('auth-storage') : null;
+        if (authStorage) {
+          try {
+            const parsed = JSON.parse(authStorage);
+            const token = parsed?.state?.token;
+            if (token) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+          } catch (e) {
+            // Ignore parsing errors
+          }
         }
         return config;
       },
@@ -41,8 +49,8 @@ class ApiClient {
           switch (error.response.status) {
             case 401:
               // Unauthorized - clear token and redirect to login
-              localStorage.removeItem('auth_token');
-              window.location.href = '/login';
+              localStorage.removeItem('auth-storage');
+              window.location.href = '/auth';
               break;
             case 429:
               // Rate limit exceeded

@@ -19,7 +19,12 @@ export class AuthController {
   @Post('register')
   @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 requests per hour
   async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+    const result = await this.authService.register(registerDto);
+    // Return 'token' instead of 'accessToken' for frontend compatibility
+    return {
+      token: result.accessToken,
+      user: result.user,
+    };
   }
 
   /**
@@ -30,7 +35,12 @@ export class AuthController {
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+    const result = await this.authService.login(loginDto);
+    // Return 'token' instead of 'accessToken' for frontend compatibility
+    return {
+      token: result.accessToken,
+      user: result.user,
+    };
   }
 
   /**
