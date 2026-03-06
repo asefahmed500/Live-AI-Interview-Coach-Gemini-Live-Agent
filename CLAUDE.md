@@ -2,6 +2,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Quick Reference
+
+**Production URLs:**
+- Frontend: https://web-taupe-theta-94.vercel.app
+- Backend API: https://live-interview-api-ywh3e45esq-uc.a.run.app
+- WebSocket: wss://live-interview-api-ywh3e45esq-uc.a.run.app/live
+
+**Key Commands:**
+```bash
+pnpm install          # Install dependencies
+pnpm dev              # Start all apps (web:3000, api:3001)
+pnpm build            # Build all packages
+pnpm lint             # Lint all packages
+```
+
+**Engine Requirements:**
+- Node.js: >=18.0.0
+- pnpm: >=8.0.0 (exact: 8.15.0)
+
+---
+
 ## Project Overview
 
 This is a **Live AI Interview Coach** monorepo built for the **Gemini Live Agent Challenge 2025**. It provides real-time, multimodal interview coaching with:
@@ -336,7 +357,7 @@ gcloud run deploy live-interview-api \
   --region us-central1 \
   --memory 2048Mi --cpu 2 \
   --timeout 3600s \
-  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,MONGODB_URI=mongodb-uri:latest \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,MONGODB_URI=mongodb-uri:latest,JWT_SECRET=jwt-secret:latest \
   --set-env-vars NODE_ENV=production,API_PORT=3001,API_HOST=0.0.0.0,CORS_ORIGINS=https://web-taupe-theta-94.vercel.app,http://localhost:3000 \
   --allow-unauthenticated
 ```
@@ -347,6 +368,22 @@ gcloud run deploy live-interview-api \
 ```
 mongodb+srv://username:password@cluster0.8vksczm.mongodb.net/liveaicoachdb?appName=Cluster0
 ```
+
+### Production Deployment Status
+
+**Current Deployments (as of March 2026):**
+
+| Service | URL | Platform | Status |
+|---------|-----|----------|--------|
+| Frontend | https://web-taupe-theta-94.vercel.app | Vercel | ✅ Live |
+| Backend API | https://live-interview-api-ywh3e45esq-uc.a.run.app | Google Cloud Run | ✅ Live |
+| Database | MongoDB Atlas | Cluster connected | ✅ Live |
+
+**E2E Test Results:**
+- All 10 core tests passed (health, auth, sessions, profile, etc.)
+- Full report: `FINAL-E2E-TEST-REPORT.md`
+
+**Google Cloud Project:** `voice-ai-agent-447515`
 
 ## Important Configuration
 
@@ -368,6 +405,9 @@ CORS_ORIGINS=http://localhost:3000,https://your-vercel-app.vercel.app
 # Authentication
 JWT_SECRET=your-secret-key-change-this
 JWT_EXPIRATION=7d
+
+# ⚠️ IMPORTANT: JWT_SECRET must be exactly 64 characters for production
+# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 # Rate Limiting
 THROTTLE_TTL=60000
@@ -529,4 +569,7 @@ email: string;
 - `apps/web/src/types-shared/` - Inlined shared types for Vercel
 - `apps/web/next.config.mjs` - Vercel build configuration
 - `deploy.sh` - Google Cloud Run automated deployment
+- `deploy-windows.ps1` - Windows PowerShell deployment script
 - `apps/api/Dockerfile` - Production container image
+- `apps/api/Dockerfile.cloudrun` - Cloud Run optimized Dockerfile
+- `FINAL-E2E-TEST-REPORT.md` - Complete E2E test results
