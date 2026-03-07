@@ -67,12 +67,10 @@ Remove-Item $mongoTemp
 Write-Host "[4/6] Building and pushing Docker image..." -ForegroundColor Green
 $imageName = "gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest"
 
-# Build with Docker
-Push-Location apps\api
-docker build -f Dockerfile -t $imageName .
+# Build with Docker (use repo root as context since Dockerfile references root files)
+docker build -f apps/api/Dockerfile -t $imageName .
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Docker build failed!" -ForegroundColor Red
-    Pop-Location
     exit 1
 }
 
@@ -80,7 +78,6 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "  Pushing image to gcr.io..." -ForegroundColor Yellow
 & $GCLOUD auth configure-docker gcr.io --quiet
 docker push $imageName
-Pop-Location
 
 # Deploy to Cloud Run
 Write-Host "[5/6] Deploying to Cloud Run..." -ForegroundColor Green

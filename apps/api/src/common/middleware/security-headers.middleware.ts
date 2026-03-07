@@ -93,19 +93,26 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
   private setCORSHeaders(req: Request, res: Response): void {
     const origin = req.headers['origin'] as string;
 
-    // In production, whitelist allowed origins
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+    // In development, be more permissive with localhost
+    const allowedOrigins = (process.env.CORS_ORIGINS || process.env.ALLOWED_ORIGINS)?.split(',') || [
       'http://localhost:3000',
       'http://localhost:3001',
+      'http://localhost:3002',
     ];
 
-    if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
+    const isAllowed = 
+      !origin || 
+      allowedOrigins.includes(origin) || 
+      origin.startsWith('http://localhost:') || 
+      origin.endsWith('.vercel.app');
+
+    if (isAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin || '*');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       res.setHeader(
         'Access-Control-Allow-Headers',
-        'Content-Type, Authorization, X-Request-ID, X-Client-Version'
+        'Content-Type, Authorization, X-Request-ID, X-Client-Version, X-API-Version'
       );
       res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
     }

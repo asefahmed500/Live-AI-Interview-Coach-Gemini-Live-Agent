@@ -53,12 +53,19 @@ async function bootstrap() {
 
   // CORS Configuration
   const allowedOrigins = configService
-    .get<string>('CORS_ORIGINS', 'http://localhost:3000')
+    .get<string>('CORS_ORIGINS', 'http://localhost:3000,http://localhost:3001,http://localhost:3002')
     .split(',');
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow if no origin (like mobile apps or curl) or if in allowedOrigins
+      // Also allow any localhost and any vercel project domain for testing
+      if (
+        !origin || 
+        allowedOrigins.includes(origin) || 
+        origin.startsWith('http://localhost:') || 
+        origin.endsWith('.vercel.app')
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Origin not allowed by CORS'));
@@ -66,7 +73,8 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-API-Version', 'X-Request-ID'],
+    exposedHeaders: ['X-Request-ID'],
   });
 
   // Global Validation Pipe with strict mode
