@@ -23,7 +23,10 @@ WORKDIR /app
 
 # Copy package files and workspace config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# Copy all package.json files to maintain workspace structure
 COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
 
 # Install pnpm
 RUN npm install -g pnpm@8.15.0
