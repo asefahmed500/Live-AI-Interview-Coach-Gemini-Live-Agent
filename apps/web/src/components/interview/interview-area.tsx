@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useInterviewStore } from '@/store';
 import { useAudioStream, useAIStreaming, useCameraAnalysis } from '@/hooks';
 import { WaveformVisualizer } from '@/components/audio';
 import { CameraPreview, CameraStats } from '@/components/camera';
 import { StreamingMessage, UserMessage, SystemMessage } from '@/components/chat';
 import { cn } from '@/lib/utils';
+import { getWebSocketClient } from '@/lib/websocket-client';
 import {
   Play,
   Square,
@@ -58,6 +59,7 @@ export function InterviewArea() {
   // Local state for UI controls
   const [isMuted, setIsMuted] = useState(false);
   const [showCamera, _setShowCamera] = useState(true);
+  const autoStartedRef = useRef(false);
 
   const hasJobDescription = jobDescription.trim().length > 0;
   const isIdle = sessionState === 'idle';
@@ -105,6 +107,30 @@ export function InterviewArea() {
       stopCameraAnalysis();
     }
   }, [sessionState, isCameraAnalyzing, stopCameraAnalysis]);
+
+  // Auto-start audio/camera when session becomes active (backend confirmed)
+  useEffect(() => {
+    if (sessionState === 'active' && !autoStartedRef.current) {
+      autoStartedRef.current = true;
+      const autoStart = async () => {
+        try {
+          await startRecording();
+          setIsRecording(true);
+        } catch (err) {
+          console.error('[InterviewArea] Auto-start recording failed:', err);
+        }
+        try {
+          await startCameraAnalysis();
+        } catch (err) {
+          console.error('[InterviewArea] Auto-start camera failed:', err);
+        }
+      };
+      autoStart();
+    }
+    if (sessionState === 'idle') {
+      autoStartedRef.current = false;
+    }
+  }, [sessionState, startRecording, setIsRecording, startCameraAnalysis]);
 
   return (
     <main
@@ -194,8 +220,15 @@ export function InterviewArea() {
                   className="w-full py-2.5 font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-2 shadow-notion hover:shadow-notion-md"
                   style={{ background: 'oklch(0.97 0 0)', color: 'oklch(0.20 0 0)', border: '1px solid oklch(0.92 0 0)' }}
                   onClick={() => {
-                    // Trigger session start
+                    // Trigger session start via WebSocket
                     useInterviewStore.getState().setSessionState('starting');
+                    const wsClient = getWebSocketClient();
+                    const store = useInterviewStore.getState();
+                    wsClient.startSession({
+                      jobDescription: store.jobDescription,
+                      mode: store.mode,
+                      difficulty: store.difficulty || undefined,
+                    });
                   }}
                 >
                   <Play className="w-4 h-4" />
@@ -404,16 +437,17 @@ export function InterviewArea() {
                     <button
                       className="px-6 py-2.5 font-medium rounded-md transition-all duration-200 shadow-notion hover:shadow-notion-md flex items-center gap-2"
                       style={{ background: 'oklch(0.97 0 0)', color: 'oklch(0.20 0 0)', border: '1px solid oklch(0.92 0 0)' }}
-                      onClick={async () => {
-                        useInterviewStore.getState().setSessionState('active');
-                        // Auto-start audio recording when session starts
-                        try {
-                          await handleToggleRecording();
-                          // Also try to start camera analysis
-                          await handleToggleCamera();
-                        } catch (err) {
-                          console.error('[InterviewArea] Failed to start audio/camera:', err);
-                        }
+                      onClick={() => {
+                        // Set state to 'starting' and send start_session over WebSocket
+                        useInterviewStore.getState().setSessionState('starting');
+                        const wsClient = getWebSocketClient();
+                        const store = useInterviewStore.getState();
+                        wsClient.startSession({
+                          jobDescription: store.jobDescription,
+                          mode: store.mode,
+                          difficulty: store.difficulty || undefined,
+                        });
+                        // Audio/camera will auto-start when session becomes 'active' via useEffect
                       }}
                     >
                       <Play className="w-4 h-4" />

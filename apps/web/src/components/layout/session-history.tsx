@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { sessionsApi, type Session, type SessionStatistics } from '@/lib/sessions-api';
-import { useAuthStore } from '@/store/use-auth-store';
+import { useBetterAuthStore } from '@/store/use-better-auth-store';
 import { Clock, TrendingUp, MessageSquare, Target, Play, BarChart3, Loader2 } from 'lucide-react';
 
 export function SessionHistory() {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useBetterAuthStore();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [statistics, setStatistics] = useState<SessionStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -181,7 +181,7 @@ export function SessionHistory() {
                           <span className="flex items-center gap-1">
                             <Target className="w-3 h-3" />
                             {Math.round(
-                              (session.confidenceHistory.reduce((a, b) => a + b, 0) /
+                              (session.confidenceHistory.reduce((a: number, b: number) => a + b, 0) /
                                 session.confidenceHistory.length) *
                                 100
                             )}

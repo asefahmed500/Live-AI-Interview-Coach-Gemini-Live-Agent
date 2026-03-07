@@ -10,8 +10,8 @@ const config: Config = {
     ignoreBuildErrors: false,
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.API_URL || 'http://localhost:3001',
-    NEXT_PUBLIC_WS_URL: process.env.WS_URL || 'ws://localhost:3001',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://live-interview-api-ywh3e45esq-uc.a.run.app',
+    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'wss://live-interview-api-ywh3e45esq-uc.a.run.app',
   },
 };
 

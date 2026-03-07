@@ -68,14 +68,24 @@ class EnvironmentVariables {
   // =====================
   // Security
   // =====================
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MinLength(32)
-  JWT_SECRET: string;
+  JWT_SECRET?: string;
 
   @IsOptional()
   @IsString()
   JWT_EXPIRATION?: string;
+
+  // Better Auth Configuration
+  @IsOptional()
+  @IsString()
+  @MinLength(32)
+  BETTER_AUTH_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  BETTER_AUTH_URL?: string;
 
   // =====================
   // CORS
@@ -92,16 +102,10 @@ class EnvironmentVariables {
   // Rate Limiting
   // =====================
   @IsOptional()
-  @IsInt()
-  @Min(1000)
-  @Max(600000)
-  THROTTLE_TTL?: number;
+  THROTTLE_TTL?: string | number;
 
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(1000)
-  THROTTLE_LIMIT?: number;
+  THROTTLE_LIMIT?: string | number;
 
   // =====================
   // Logging
@@ -164,9 +168,12 @@ export function validate(config: Record<string, unknown>) {
   if (transformed.NODE_ENV === 'production') {
     const prodErrors: string[] = [];
 
-    // Check JWT secret is not default
-    if (transformed.JWT_SECRET?.length < 64) {
-      prodErrors.push('JWT_SECRET must be at least 64 characters in production');
+    // Check for Better Auth secret or JWT secret (Better Auth preferred)
+    const hasBetterAuthSecret = (transformed.BETTER_AUTH_SECRET?.length || 0) >= 32;
+    const hasJwtSecret = (transformed.JWT_SECRET?.length || 0) >= 64;
+
+    if (!hasBetterAuthSecret && !hasJwtSecret) {
+      prodErrors.push('Either BETTER_AUTH_SECRET (min 32 chars) or JWT_SECRET (min 64 chars) must be set in production');
     }
 
     // Check MongoDB URI is not localhost
@@ -217,4 +224,3 @@ export function getCorsOrigins(): string[] {
 
   return corsOrigins.split(',').map((origin) => origin.trim()).filter(Boolean);
 }
-

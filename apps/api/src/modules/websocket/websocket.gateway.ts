@@ -35,7 +35,7 @@ import { ConfidenceEngineService } from '../confidence/confidence-engine.service
 @WebSocketGateway({
   namespace: '/live',
   cors: {
-    origin: '*',
+    origin: true,
     credentials: true,
   },
   transports: ['websocket', 'polling'],
@@ -43,8 +43,7 @@ import { ConfidenceEngineService } from '../confidence/confidence-engine.service
   pingInterval: 25000,
 })
 export class LiveInterviewGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -55,7 +54,7 @@ export class LiveInterviewGateway
     @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly winstonLogger: any,
     private readonly sessionManager: SessionManagerService,
     private readonly confidenceEngine: ConfidenceEngineService
-  ) {}
+  ) { }
 
   afterInit(_server: Server): void {
     this.logger.log('Live Interview Gateway initialized on namespace: /live');
@@ -322,8 +321,8 @@ export class LiveInterviewGateway
       const confidenceWeights = { eyeContact: 0.4, posture: 0.3, engagement: 0.3 };
       const calculatedConfidence = Math.round(
         analysis.eyeContact * confidenceWeights.eyeContact +
-          analysis.posture * confidenceWeights.posture +
-          analysis.engagement * confidenceWeights.engagement
+        analysis.posture * confidenceWeights.posture +
+        analysis.engagement * confidenceWeights.engagement
       );
 
       // Store frame analysis results in session
@@ -710,26 +709,75 @@ export class LiveInterviewGateway
   }
 
   /**
-   * Send final feedback
+   * Send final feedback with real confidence data and session summary
    */
   private async sendFinalFeedback(
     client: Socket,
     sessionId: string,
-    _transcript: Array<{ role: string; content: string; timestamp: number }>
+    transcript: Array<{ role: string; content: string; timestamp: number }>
   ): Promise<void> {
-    // Build conversation summary (for future use in detailed feedback)
-    // const summary = transcript
-    //   .map((t) => `${t.role}: ${t.content}`)
-    //   .join('\n\n');
+    try {
+      // Calculate final confidence score
+      const scoringResult = await this.confidenceEngine.calculateConfidence(sessionId);
 
-    // Emit feedback event
-    client.emit(WebSocketEvents.FEEDBACK_GENERATED, {
-      sessionId,
-      feedback: 'Interview completed. Good work!',
-      timestamp: new Date().toISOString(),
-    });
+      // Get frame analysis summary
+      const frameAnalyses = this.sessionManager.getSession(sessionId)?.frameAnalyses || [];
+      const avgEyeContact = frameAnalyses.length > 0
+        ? Math.round(frameAnalyses.reduce((s, f) => s + f.eyeContact, 0) / frameAnalyses.length)
+        : 0;
+      const avgPosture = frameAnalyses.length > 0
+        ? Math.round(frameAnalyses.reduce((s, f) => s + f.posture, 0) / frameAnalyses.length)
+        : 0;
+      const avgEngagement = frameAnalyses.length > 0
+        ? Math.round(frameAnalyses.reduce((s, f) => s + f.engagement, 0) / frameAnalyses.length)
+        : 0;
 
-    this.logger.log(`Final feedback sent for session ${sessionId}`);
+      // Build strengths and weaknesses from scoring
+      const strengths: string[] = [];
+      const weaknesses: string[] = [];
+
+      if (scoringResult.breakdown.speechClarity >= 70) strengths.push('Clear and articulate communication');
+      else weaknesses.push('Speech clarity needs improvement');
+
+      if (scoringResult.breakdown.eyeContact >= 70) strengths.push('Strong eye contact with camera');
+      else weaknesses.push('Improve eye contact with the camera');
+
+      if (scoringResult.breakdown.posture >= 70) strengths.push('Confident body language');
+      else weaknesses.push('Work on maintaining upright posture');
+
+      if (scoringResult.breakdown.fillerWords >= 70) strengths.push('Minimal use of filler words');
+      else weaknesses.push('Reduce filler words (um, uh, like)');
+
+      // Emit comprehensive feedback event
+      client.emit(WebSocketEvents.FEEDBACK_GENERATED, {
+        sessionId,
+        overallScore: scoringResult.score,
+        breakdown: scoringResult.breakdown,
+        visionBreakdown: {
+          eyeContact: avgEyeContact,
+          posture: avgPosture,
+          engagement: avgEngagement,
+        },
+        strengths,
+        weaknesses,
+        suggestions: scoringResult.suggestions,
+        totalQuestions: transcript.filter(t => t.role === 'assistant').length,
+        totalResponses: transcript.filter(t => t.role === 'user').length,
+        totalFramesAnalyzed: frameAnalyses.length,
+        feedback: `Interview completed! Your overall confidence score was ${scoringResult.score}%. ${strengths.length > 0 ? 'Strengths: ' + strengths.join(', ') + '.' : ''} ${weaknesses.length > 0 ? 'Areas to improve: ' + weaknesses.join(', ') + '.' : ''}`,
+        timestamp: new Date().toISOString(),
+      });
+
+      this.logger.log(`Final feedback sent for session ${sessionId}: score ${scoringResult.score}%`);
+    } catch (error: any) {
+      this.logger.error(`Error generating final feedback for ${sessionId}: ${error.message}`);
+      // Fallback to basic feedback
+      client.emit(WebSocketEvents.FEEDBACK_GENERATED, {
+        sessionId,
+        feedback: 'Interview completed. Thank you for practicing!',
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   /**

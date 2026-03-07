@@ -1,11 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, Request } from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
-import { AuthGuard } from '../../common/guards/auth.guard';
 import { CreateFeedbackDto } from './dtos/create-feedback.dto';
 import { UpdateFeedbackDto } from './dtos/update-feedback.dto';
 
 @Controller('feedback')
-@UseGuards(AuthGuard)
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
@@ -15,7 +13,9 @@ export class FeedbackController {
    */
   @Get()
   async findAll(@Request() req: any, @Query('sessionId') sessionId?: string) {
-    return this.feedbackService.findAll(req.userId, sessionId);
+    // TODO: Implement Better Auth session validation
+    const userId = req.user?.id || 'demo-user';
+    return this.feedbackService.findAll(userId, sessionId);
   }
 
   /**
@@ -23,7 +23,8 @@ export class FeedbackController {
    */
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req: any) {
-    return this.feedbackService.findOne(id, req.userId);
+    const userId = req.user?.id || 'demo-user';
+    return this.feedbackService.findOne(id, userId);
   }
 
   /**
@@ -31,7 +32,8 @@ export class FeedbackController {
    */
   @Get('session/:sessionId')
   async findBySession(@Param('sessionId') sessionId: string, @Request() req: any) {
-    return this.feedbackService.findBySession(sessionId, req.userId);
+    const userId = req.user?.id || 'demo-user';
+    return this.feedbackService.findBySession(sessionId, userId);
   }
 
   /**
@@ -39,7 +41,8 @@ export class FeedbackController {
    */
   @Get('session/:sessionId/comprehensive')
   async findComprehensiveBySession(@Param('sessionId') sessionId: string, @Request() req: any) {
-    return this.feedbackService.findComprehensiveBySession(sessionId, req.userId);
+    const userId = req.user?.id || 'demo-user';
+    return this.feedbackService.findComprehensiveBySession(sessionId, userId);
   }
 
   /**
@@ -47,7 +50,8 @@ export class FeedbackController {
    */
   @Get('user/average-scores')
   async getAverageScores(@Request() req: any) {
-    return this.feedbackService.getAverageScores(req.userId);
+    const userId = req.user?.id || 'demo-user';
+    return this.feedbackService.getAverageScores(userId);
   }
 
   /**
@@ -55,7 +59,8 @@ export class FeedbackController {
    */
   @Post()
   async create(@Body() createFeedbackDto: CreateFeedbackDto, @Request() req: any) {
-    return this.feedbackService.create(createFeedbackDto, req.userId);
+    const userId = req.user?.id || 'demo-user';
+    return this.feedbackService.create(createFeedbackDto, userId);
   }
 
   /**
@@ -63,7 +68,8 @@ export class FeedbackController {
    */
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateFeedbackDto: UpdateFeedbackDto, @Request() req: any) {
-    return this.feedbackService.update(id, updateFeedbackDto, req.userId);
+    const userId = req.user?.id || 'demo-user';
+    return this.feedbackService.update(id, updateFeedbackDto, userId);
   }
 
   /**
@@ -71,6 +77,7 @@ export class FeedbackController {
    */
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req: any) {
-    return this.feedbackService.remove(id, req.userId);
+    const userId = req.user?.id || 'demo-user';
+    return this.feedbackService.remove(id, userId);
   }
 }

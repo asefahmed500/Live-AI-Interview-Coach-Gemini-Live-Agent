@@ -1,6 +1,10 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "buildCommand": "pnpm run build",
+  "installCommand": "pnpm install",
   "framework": "nextjs",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://live-interview-api-ywh3e45esq-uc.a.run.app",
+    "NEXT_PUBLIC_WS_URL": "wss://live-interview-api-ywh3e45esq-uc.a.run.app"
+  }
 }

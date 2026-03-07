@@ -1,7 +1,7 @@
 'use client';
 
-import { AuthForm } from '@/components/auth/auth-form';
+import { BetterAuthForm } from '@/components/auth/better-auth-form';
 
 export default function AuthPage() {
-  return <AuthForm />;
+  return <BetterAuthForm />;
 }

@@ -2,13 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/use-auth-store';
-import { authApi } from '@/lib/auth-api';
+import { useBetterAuthStore } from '@/store/use-better-auth-store';
 import { Loader2, Mail, Lock, User, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
 
-export function AuthForm() {
+/**
+ * Better Auth Form Component
+ *
+ * This component uses Better Auth for authentication.
+ * It provides login and registration functionality with a toggle between modes.
+ */
+export function BetterAuthForm() {
   const router = useRouter();
-  const { login, setLoading, isLoading } = useAuthStore();
+  const { login, register, isLoading } = useBetterAuthStore();
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,32 +25,22 @@ export function AuthForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
     try {
       if (isLogin) {
-        const response = await authApi.login(email, password);
-        if (response.success) {
-          login(response.data.user, response.data.token);
-          router.push('/dashboard');
-        }
+        await login(email, password);
+        router.push('/dashboard');
       } else {
         if (password !== confirmPassword) {
           setError('Passwords do not match');
-          setLoading(false);
           return;
         }
 
-        const response = await authApi.register(name, email, password);
-        if (response.success) {
-          login(response.data.user, response.data.token);
-          router.push('/dashboard');
-        }
+        await register(name, email, password);
+        router.push('/dashboard');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useInterviewStore } from '@/store';
-import { useAuthStore } from '@/store/use-auth-store';
+import { useBetterAuthStore } from '@/store/use-better-auth-store';
 import { cn } from '@/lib/utils';
 import {
   Mic,
@@ -24,7 +24,7 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar }: HeaderProps) {
   const { connectionState, sessionState, isRecording, error } = useInterviewStore();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useBetterAuthStore();
   const router = useRouter();
 
   // Get connection signal icon

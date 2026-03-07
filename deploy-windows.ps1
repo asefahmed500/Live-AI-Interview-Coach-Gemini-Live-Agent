@@ -6,9 +6,25 @@ $PROJECT_ID = "voice-ai-agent-447515"
 $REGION = "us-central1"
 $SERVICE_NAME = "live-interview-api"
 
-# Environment variables
-$GEMINI_API_KEY = "AIzaSyC1hC7VQNRLlSsLL_8nPO-udRffqjl8V98"
-$MONGODB_URI = "mongodb+srv://liveaicoach:l7bTrF60Aes838d6@cluster0.8vksczm.mongodb.net/liveaicoachdb?appName=Cluster0"
+# Environment variables - MUST be set before running
+# Example:
+# $env:GEMINI_API_KEY="your-gemini-api-key"
+# $env:MONGODB_URI="mongodb+srv://..."
+$GEMINI_API_KEY = $env:GEMINI_API_KEY
+$MONGODB_URI = $env:MONGODB_URI
+
+# Validate required environment variables
+if ([string]::IsNullOrEmpty($GEMINI_API_KEY)) {
+    Write-Host "ERROR: GEMINI_API_KEY environment variable not set" -ForegroundColor Red
+    Write-Host "Usage: `$env:GEMINI_API_KEY='your-key'; `$env:MONGODB_URI='your-connection-string'; .\deploy-windows.ps1" -ForegroundColor Yellow
+    exit 1
+}
+
+if ([string]::IsNullOrEmpty($MONGODB_URI)) {
+    Write-Host "ERROR: MONGODB_URI environment variable not set" -ForegroundColor Red
+    Write-Host "Usage: `$env:GEMINI_API_KEY='your-key'; `$env:MONGODB_URI='your-connection-string'; .\deploy-windows.ps1" -ForegroundColor Yellow
+    exit 1
+}
 
 $GCLOUD = "C:\Users\asefa\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd"
 
@@ -53,7 +69,7 @@ $imageName = "gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest"
 
 # Build with Docker
 Push-Location apps\api
-docker build -f Dockerfile.cloudrun -t $imageName .
+docker build -f Dockerfile -t $imageName .
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Docker build failed!" -ForegroundColor Red
     Pop-Location
@@ -78,9 +94,8 @@ Write-Host "[5/6] Deploying to Cloud Run..." -ForegroundColor Green
     --concurrency 80 `
     --max-instances 10 `
     --min-instances 1 `
-    --set-env-vars NODE_ENV=production,API_PORT=3001,API_HOST=0.0.0.0,API_PREFIX=api `
-    --set-env-vars CORS_ORIGINS=https://web-taupe-theta-94.vercel.app,http://localhost:3000 `
-    --set-secrets GEMINI_API_KEY=gemini-api-key:latest,MONGODB_URI=mongodb-uri:latest `
+    --set-env-vars NODE_ENV=production,API_PORT=3001,API_HOST=0.0.0.0,API_PREFIX=api,CORS_ORIGINS=https://web-taupe-theta-94.vercel.app,http://localhost:3000 `
+    --set-secrets GEMINI_API_KEY=gemini-api-key:latest,MONGODB_URI=mongodb-uri:latest,JWT_SECRET=jwt-secret:latest `
     --allow-unauthenticated
 
 # Get service URL

@@ -49,6 +49,8 @@ export class GeminiService implements OnModuleDestroy {
   private readonly defaultTimeout: number;
 
   constructor(
+    @Inject(ConfigService)
+  
     private configService: ConfigService,
     @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly winstonLogger: any
   ) {

@@ -67,6 +67,7 @@ class WebSocketClient {
           transports: ['websocket', 'polling'],
           reconnection: false, // We'll handle reconnection manually
           timeout: 10000,
+          withCredentials: true,  // Include cookies for Better Auth
         });
 
         // Connection successful

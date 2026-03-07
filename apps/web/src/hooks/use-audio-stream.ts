@@ -83,6 +83,16 @@ export function useAudioStream(options: AudioStreamOptions = {}): UseAudioStream
     }
   }, [isSupported, mimeType]);
 
+  // Convert ArrayBuffer to base64 string (loop-based, safe for large chunks)
+  const arrayBufferToBase64 = useCallback((buffer: ArrayBuffer): string => {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }, []);
+
   // Send audio chunk via WebSocket
   const sendAudioChunk = useCallback(async (chunk: Blob) => {
     if (sessionId && sessionState === 'active') {
@@ -90,7 +100,7 @@ export function useAudioStream(options: AudioStreamOptions = {}): UseAudioStream
         const arrayBuffer = await chunk.arrayBuffer();
         wsClient.current.sendAudioChunk({
           sessionId,
-          chunkData: JSON.stringify(Array.from(new Uint8Array(arrayBuffer))),
+          chunkData: arrayBufferToBase64(arrayBuffer),
           sequenceNumber: sequenceNumberRef.current++,
           timestamp: Date.now(),
         });
@@ -98,7 +108,7 @@ export function useAudioStream(options: AudioStreamOptions = {}): UseAudioStream
         console.error('[useAudioStream] Failed to send audio chunk:', err);
       }
     }
-  }, [sessionId, sessionState]);
+  }, [sessionId, sessionState, arrayBufferToBase64]);
 
   // Start recording
   const startRecording = useCallback(async () => {

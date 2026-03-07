@@ -118,6 +118,7 @@ async function bootstrap() {
   logger.log(`API URL: http://${host}:${port}/${apiPrefix}`, 'Bootstrap');
   logger.log(`Health Check: http://${host}:${port}/${apiPrefix}/health`, 'Bootstrap');
   logger.log(`WebSocket: ws://${host}:${port}`, 'Bootstrap');
+  logger.log(`Better Auth: http://${host}:${port}/${apiPrefix}/auth/health`, 'Bootstrap');
   logger.log('=================================', 'Bootstrap');
 
   // Graceful shutdown handling

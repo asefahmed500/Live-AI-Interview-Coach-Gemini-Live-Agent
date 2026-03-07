@@ -8,7 +8,7 @@ import * as winston from 'winston';
 import { validate } from './config/validation.schema';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
-import { AuthModule } from './modules/auth/auth.module';
+import { BetterAuthModule } from './modules/better-auth/better-auth.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { WebSocketModule } from './modules/websocket/websocket.module';
@@ -81,7 +81,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
     // Feature Modules
     DatabaseModule,
     HealthModule,
-    AuthModule,
+    BetterAuthModule, // Better Auth module
     SessionsModule,
     FeedbackModule,
     WebSocketModule,

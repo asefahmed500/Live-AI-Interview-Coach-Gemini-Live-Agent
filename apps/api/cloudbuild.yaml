@@ -65,6 +65,8 @@ steps:
       - 'GEMINI_API_KEY=gemini-api-key:latest'
       - '--set-secrets'
       - 'JWT_SECRET=jwt-secret:latest'
+      - '--set-env-vars'
+      - 'CORS_ORIGINS=https://web-taupe-theta-94.vercel.app,http://localhost:3000'
       - '--execution-environment'
       - 'gen2'
     id: 'deploy'

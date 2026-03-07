@@ -108,7 +108,8 @@ gcloud run deploy "${SERVICE_NAME}" \
     CORS_ORIGINS=https://web-taupe-theta-94.vercel.app,http://localhost:3000 \
   --set-secrets \
     GEMINI_API_KEY=gemini-api-key:latest, \
-    MONGODB_URI=mongodb-uri:latest \
+    MONGODB_URI=mongodb-uri:latest, \
+    JWT_SECRET=jwt-secret:latest \
   --allow-unauthenticated || {
   echo -e "${RED}✗ Deployment failed${NC}"
   exit 1

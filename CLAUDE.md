@@ -116,7 +116,7 @@ live-ai-interview-coach/
 Each feature follows NestJS's modular pattern:
 ```
 modules/
-├── auth/               # Authentication (JWT)
+├── better-auth/        # Authentication (Better Auth - session-based)
 ├── sessions/           # Session CRUD
 ├── feedback/           # Feedback generation
 ├── websocket/          # WebSocket gateway (/live namespace)
@@ -126,7 +126,7 @@ modules/
 **Common utilities** (`common/` directory):
 - `decorators/` - Custom decorators (@CurrentUser)
 - `filters/` - Exception filters (HttpExceptionFilter, AllExceptionsFilter)
-- `guards/` - Route guards (AuthGuard, RateLimitGuard)
+- `guards/` - Route guards (BetterAuthGuard, RateLimitGuard)
 - `interceptors/` - Transform, logging, timeout interceptors
 - `middleware/` - Security headers, request size, request logging
 - `pipes/` - Custom validation pipes
@@ -134,7 +134,7 @@ modules/
 ```
 
 **Key backend concepts:**
-- **Guards**: Route-level authentication (JWT)
+- **Guards**: Route-level authentication (Better Auth - session cookies)
 - **Interceptors**: TransformInterceptor wraps responses in `{ data, timestamp }`
 - **Filters**: HttpExceptionFilter handles global errors
 - **Pipes**: ValidationPipe with strict mode (whitelist + forbidNonWhitelisted)
@@ -244,6 +244,95 @@ import { WS_EVENTS } from '@/types-shared';
 2. Copy changes to `apps/web/src/types-shared/*`
 3. Update imports in `apps/web/src` to use `@/types-shared`
 
+## Authentication (Better Auth)
+
+The application uses **Better Auth** - a modern, framework-agnostic authentication library with session-based cookies.
+
+### Better Auth Configuration
+
+**Backend Configuration** (`apps/api/src/lib/better-auth.ts`):
+- Email/password authentication enabled
+- Session cookies with 7-day expiration
+- Custom cookie prefix: `laic`
+- Additional user fields: `name`, `role`, `isActive`
+
+**Frontend Client** (`apps/web/src/lib/better-auth-client.ts`):
+- `authClient` instance for authentication operations
+- React hooks: `useSession()` for accessing session data
+
+### Better Auth Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/sign-up/email` | Register with email/password |
+| POST | `/api/auth/sign-in/email` | Sign in with email/password |
+| POST | `/api/auth/sign-out` | Sign out |
+| GET | `/api/auth/get-session` | Get current session |
+
+### Usage Examples
+
+**Register New User**:
+```typescript
+await authClient.signUp.email({
+  email: "user@example.com",
+  password: "password123",
+  name: "John Doe"
+});
+```
+
+**Sign In**:
+```typescript
+await authClient.signIn.email({
+  email: "user@example.com",
+  password: "password123"
+});
+```
+
+**Access Session**:
+```typescript
+const { data: session } = await authClient.getSession();
+// OR use the hook
+const { data, isPending } = authClient.useSession();
+```
+
+### WebSocket Authentication
+
+WebSocket connections use `withCredentials: true` to include Better Auth session cookies:
+
+**Frontend** (`apps/web/src/lib/websocket-client.ts`):
+```typescript
+this.socket = io(this.wsUrl, {
+  withCredentials: true, // Important for cookies
+});
+```
+
+**Backend Guard** (`apps/api/src/common/guards/better-auth.guard.ts`):
+- Extracts session token from cookie headers
+- Validates session with Better Auth
+- Attaches user info to socket connection
+
+### Environment Variables
+
+```bash
+# Better Auth Configuration
+BETTER_AUTH_SECRET=<generate-with-node-crypto>
+BETTER_AUTH_URL=http://localhost:3001
+```
+
+**Generate secure secret**:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+### Key Differences from JWT
+
+1. **Session Cookies**: Better Auth uses httpOnly session cookies instead of JWT tokens
+2. **MongoDB Adapter**: Uses native MongoDB client (not Mongoose) for user storage
+3. **Collections**: Creates `user`, `session`, `account` collections separate from Mongoose models
+4. **CORS**: Requires `credentials: true` for cross-origin cookie handling
+
+---
+
 ## Deployment
 
 ### Production Architecture
@@ -348,6 +437,7 @@ $env:MONGODB_URI="mongodb+srv://..."
 # Create/update secrets
 echo -n "YOUR_API_KEY" | gcloud secrets versions add gemini-api-key --data-file=-
 echo -n "mongodb+srv://..." | gcloud secrets versions add mongodb-uri --data-file=-
+echo -n "YOUR_BETTER_AUTH_SECRET" | gcloud secrets versions add better-auth-secret --data-file=-
 
 # Build and deploy (using gcr.io, not artifact registry)
 cd apps/api
@@ -357,7 +447,7 @@ gcloud run deploy live-interview-api \
   --region us-central1 \
   --memory 2048Mi --cpu 2 \
   --timeout 3600s \
-  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,MONGODB_URI=mongodb-uri:latest,JWT_SECRET=jwt-secret:latest \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest,MONGODB_URI=mongodb-uri:latest,BETTER_AUTH_SECRET=better-auth-secret:latest \
   --set-env-vars NODE_ENV=production,API_PORT=3001,API_HOST=0.0.0.0,CORS_ORIGINS=https://web-taupe-theta-94.vercel.app,http://localhost:3000 \
   --allow-unauthenticated
 ```
@@ -402,12 +492,12 @@ MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/dbname
 # CORS
 CORS_ORIGINS=http://localhost:3000,https://your-vercel-app.vercel.app
 
-# Authentication
-JWT_SECRET=your-secret-key-change-this
-JWT_EXPIRATION=7d
+# Better Auth Configuration
+BETTER_AUTH_SECRET=<generate-with-node-crypto>
+BETTER_AUTH_URL=http://localhost:3001
 
-# ⚠️ IMPORTANT: JWT_SECRET must be exactly 64 characters for production
-# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+# ⚠️ IMPORTANT: Generate BETTER_AUTH_SECRET with:
+# node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 # Rate Limiting
 THROTTLE_TTL=60000
@@ -499,10 +589,15 @@ taskkill //PID <pid> //F
 
 ## Database Collections
 
-- **users** - Authentication and user profiles
+### Mongoose Collections (Application Data)
 - **sessions** - Interview session tracking
 - **messages** - Chat history per session
 - **feedback** - Generated feedback reports
+
+### Better Auth Collections (Authentication)
+- **user** - User accounts (Better Auth managed)
+- **session** - User sessions (Better Auth managed)
+- **account** - OAuth accounts (Better Auth managed)
 
 ## Mongoose Schema Best Practices
 
@@ -561,11 +656,22 @@ email: string;
 
 ## Key Files Reference
 
+**Better Auth (Authentication)**:
+- `apps/api/src/lib/better-auth.ts` - Better Auth configuration
+- `apps/api/src/modules/better-auth/better-auth.module.ts` - Better Auth module
+- `apps/api/src/modules/better-auth/better-auth.controller.ts` - Auth endpoint handler
+- `apps/api/src/common/guards/better-auth.guard.ts` - WebSocket authentication guard
+- `apps/web/src/lib/better-auth-client.ts` - Auth client configuration
+- `apps/web/src/store/use-better-auth-store.ts` - Zustand store for Better Auth
+
+**Core Backend**:
 - `apps/api/src/main.ts` - Application bootstrap, middleware setup
 - `apps/api/src/app.module.ts` - Root module
 - `apps/api/src/modules/websocket/websocket.gateway.ts` - WebSocket handlers
 - `apps/api/src/modules/websocket/services/session-manager.service.ts` - Session lifecycle
 - `apps/api/src/modules/confidence/confidence.module.ts` - @Global() module pattern
+
+**Frontend & Deployment**:
 - `apps/web/src/types-shared/` - Inlined shared types for Vercel
 - `apps/web/next.config.mjs` - Vercel build configuration
 - `deploy.sh` - Google Cloud Run automated deployment

@@ -3,12 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { FeedbackService } from './feedback.service';
 import { FeedbackController } from './feedback.controller';
 import { Feedback, FeedbackSchema } from './schemas';
-import { AuthModule } from '../auth/auth.module';
+import { BetterAuthModule } from '../better-auth/better-auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Feedback.name, schema: FeedbackSchema }]),
-    AuthModule,
+    BetterAuthModule,
   ],
   controllers: [FeedbackController],
   providers: [FeedbackService],

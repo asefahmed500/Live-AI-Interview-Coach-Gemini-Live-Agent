@@ -1,135 +1,106 @@
-'use client';
-
-import { apiClient } from './api-client';
-import { useAuthStore } from '@/store/use-auth-store';
-
-export interface Session {
-  id: string;
-  userId: string;
-  jobDescription: string;
-  status: 'idle' | 'active' | 'paused' | 'completed';
-  transcript: Array<{
-    role: 'user' | 'assistant';
-    content: string;
-    timestamp: string;
-    metadata?: {
-      confidence?: number;
-      feedbackType?: string;
-      duration?: number;
-    };
-  }>;
-  confidenceHistory: number[];
-  createdAt: string;
-  updatedAt: string;
-  startedAt?: string;
-  completedAt?: string;
-}
-
-export interface SessionStatistics {
-  total: number;
-  active: number;
-  completed: number;
-  averageConfidence: number;
-}
-
-export interface CreateSessionDto {
-  jobDescription: string;
-  status?: 'idle' | 'active';
-  initialMessage?: string;
-}
-
-export interface UpdateSessionDto {
-  jobDescription?: string;
-  status?: 'idle' | 'active' | 'paused' | 'completed';
-}
-
-export interface AddMessageDto {
-  role: 'user' | 'assistant';
-  content: string;
-  confidence?: number;
-  feedbackType?: string;
-  duration?: number;
-}
-
 class SessionsApi {
-  private getToken(): string | null {
-    return useAuthStore.getState().token;
-  }
-
   private getAuthHeaders() {
-    const token = this.getToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    // Better Auth uses session cookies, so we don't need to send Bearer tokens
+    // The browser will automatically include the session cookie
+    return {
+      'Content-Type': 'application/json',
+    };
   }
 
-  async createSession(data: CreateSessionDto): Promise<Session> {
-    const response = await apiClient.post<Session>('/sessions', data, {
+  async createSession(data: any): Promise<any> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions`, {
+      method: 'POST',
       headers: this.getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(data),
     });
-    return response;
+    if (!response.ok) throw new Error('Failed to create session');
+    return response.json();
   }
 
-  async getSessions(params?: {
-    status?: string;
-    search?: string;
-    limit?: number;
-    skip?: number;
-    includeCompleted?: boolean;
-  }): Promise<{ sessions: Session[]; total: number }> {
-    const response = await apiClient.get<{ sessions: Session[]; total: number }>('/sessions', {
-      params,
+  async getSessions(params?: any): Promise<any> {
+    const queryString = params ? new URLSearchParams(params as any).toString() : '';
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions?${queryString}`, {
       headers: this.getAuthHeaders(),
+      credentials: 'include',
     });
-    return response;
+    if (!response.ok) throw new Error('Failed to get sessions');
+    return response.json();
   }
 
-  async getActiveSessions(): Promise<Session[]> {
-    const response = await apiClient.get<Session[]>('/sessions/active', {
+  async getActiveSessions(): Promise<any> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions/active`, {
       headers: this.getAuthHeaders(),
+      credentials: 'include',
     });
-    return response;
+    if (!response.ok) throw new Error('Failed to get active sessions');
+    return response.json();
   }
 
-  async getCompletedSessions(limit = 10): Promise<Session[]> {
-    const response = await apiClient.get<Session[]>('/sessions/completed', {
-      params: { limit },
+  async getCompletedSessions(limit = 10): Promise<any> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions/completed?limit=${limit}`, {
       headers: this.getAuthHeaders(),
+      credentials: 'include',
     });
-    return response;
+    if (!response.ok) throw new Error('Failed to get completed sessions');
+    return response.json();
   }
 
-  async getSession(sessionId: string): Promise<Session> {
-    const response = await apiClient.get<Session>(`/sessions/${sessionId}`, {
+  async getSession(sessionId: string): Promise<any> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions/${sessionId}`, {
       headers: this.getAuthHeaders(),
+      credentials: 'include',
     });
-    return response;
+    if (!response.ok) throw new Error('Failed to get session');
+    return response.json();
   }
 
-  async updateSession(sessionId: string, data: UpdateSessionDto): Promise<Session> {
-    const response = await apiClient.patch<Session>(`/sessions/${sessionId}`, data, {
+  async updateSession(sessionId: string, data: any): Promise<any> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions/${sessionId}`, {
+      method: 'PATCH',
       headers: this.getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(data),
     });
-    return response;
+    if (!response.ok) throw new Error('Failed to update session');
+    return response.json();
   }
 
   async deleteSession(sessionId: string): Promise<void> {
-    await apiClient.delete(`/sessions/${sessionId}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions/${sessionId}`, {
+      method: 'DELETE',
       headers: this.getAuthHeaders(),
+      credentials: 'include',
     });
+    if (!response.ok) throw new Error('Failed to delete session');
   }
 
-  async addMessage(sessionId: string, data: AddMessageDto): Promise<Session> {
-    const response = await apiClient.post<Session>(`/sessions/${sessionId}/messages`, data, {
+  async addMessage(sessionId: string, data: any): Promise<any> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions/${sessionId}/messages`, {
+      method: 'POST',
       headers: this.getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(data),
     });
-    return response;
+    if (!response.ok) throw new Error('Failed to add message');
+    return response.json();
   }
 
-  async getStatistics(): Promise<SessionStatistics> {
-    const response = await apiClient.get<SessionStatistics>('/sessions/statistics', {
+  async getStatistics(): Promise<any> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/sessions/statistics`, {
       headers: this.getAuthHeaders(),
+      credentials: 'include',
     });
-    return response;
+    if (!response.ok) throw new Error('Failed to get statistics');
+    return response.json();
   }
 }
 
 export const sessionsApi = new SessionsApi();
+
+// Re-export types for convenience
+export type Session = any;
+export type SessionStatistics = any;
+export type CreateSessionDto = any;
+export type UpdateSessionDto = any;
+export type AddMessageDto = any;

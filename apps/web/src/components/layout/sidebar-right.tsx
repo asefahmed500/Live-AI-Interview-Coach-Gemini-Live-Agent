@@ -2,13 +2,13 @@
 
 import { useInterviewStore } from '@/store';
 import { cn, getConfidenceColor, getConfidenceBg } from '@/lib/utils';
-import { useAuthStore } from '@/store/use-auth-store';
+import { useBetterAuthStore } from '@/store/use-better-auth-store';
 import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react';
 import { SessionHistory } from './session-history';
 
 export function SidebarRight() {
   const { confidence, sidebarOpen } = useInterviewStore();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useBetterAuthStore();
 
   if (!sidebarOpen) return null;
 
