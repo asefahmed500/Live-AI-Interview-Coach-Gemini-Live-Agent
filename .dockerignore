@@ -1,5 +1,6 @@
 node_modules
-dist
+# dist (Temporarily allowed for Attempt 9 manual build)
+# dist
 .next
 .turbo
 *.log
