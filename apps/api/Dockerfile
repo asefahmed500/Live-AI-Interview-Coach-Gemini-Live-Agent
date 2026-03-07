@@ -24,10 +24,9 @@ WORKDIR /app
 # Copy package files and workspace config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
-COPY packages/shared/package.json ./packages/shared/
 
 # Install pnpm
-RUN npm install -g pnpm@latest
+RUN npm install -g pnpm@8.15.0
 
 # Install all workspace dependencies
 RUN pnpm install --frozen-lockfile=false
@@ -35,8 +34,8 @@ RUN pnpm install --frozen-lockfile=false
 # Copy all source code
 COPY . .
 
-# Build application - use turbo which handles workspace properly
-RUN pnpm exec turbo run build --filter=@live-ai-coach/api
+# Build application
+RUN pnpm --filter=@live-ai-coach/api run build
 
 # ========================================
 # Stage 2: Production
