@@ -27,7 +27,7 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
 
 # Install pnpm
-RUN npm install -g pnpm@latest turbo@latest
+RUN npm install -g pnpm@latest
 
 # Install all workspace dependencies
 RUN pnpm install --frozen-lockfile=false
@@ -36,7 +36,7 @@ RUN pnpm install --frozen-lockfile=false
 COPY . .
 
 # Build application - use turbo which handles workspace properly
-RUN turbo run build --filter=@live-ai-coach/api
+RUN pnpm exec turbo run build --filter=@live-ai-coach/api
 
 # ========================================
 # Stage 2: Production
