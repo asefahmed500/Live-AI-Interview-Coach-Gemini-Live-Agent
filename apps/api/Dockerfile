@@ -30,7 +30,9 @@ RUN pnpm install --frozen-lockfile=false
 COPY . .
 
 # Build application
-RUN pnpm --filter=@live-ai-coach/api run build
+RUN pnpm install turbo --global && \
+    ls -la node_modules/.bin && \
+    pnpm turbo run build --filter=@live-ai-coach/api --verbose
 
 # ========================================
 # Stage 2: Production
