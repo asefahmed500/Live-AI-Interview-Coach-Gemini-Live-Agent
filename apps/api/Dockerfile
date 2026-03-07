@@ -1,25 +1,20 @@
 # ========================================
 # Stage 1: Build
 # ========================================
-FROM node:20-alpine AS builder
-
-# Set build arguments
-ARG NODE_ENV=development
-ARG PORT=3001
-
-# Set environment - use development for build to get devDependencies
-ENV NODE_ENV=${NODE_ENV} \
-    PORT=${PORT}
+FROM node:20-slim AS builder
 
 # Install build dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
-    openssl
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create app directory
 WORKDIR /app
+
+# Enable pnpm via corepack
+RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # Copy package files and workspace config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -27,9 +22,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
-
-# Install pnpm
-RUN npm install -g pnpm@8.15.0
 
 # Install all workspace dependencies
 RUN pnpm install --frozen-lockfile=false
